@@ -15,17 +15,17 @@ class Question
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(name: 'questiontext', length: 255)]
     private ?string $questionText = null;
 
     #[ORM\Column(length: 255)]
     private ?string $type = null;
 
     #[ORM\ManyToOne(targetEntity: Form::class, inversedBy: 'questions')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'idform', nullable: false)]
     private ?Form $idForm = null;
 
-    #[ORM\OneToMany(targetEntity: Radiooption::class, mappedBy: 'idQuestion', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Radiooption::class, mappedBy: 'idQuestion', cascade: ['persist'], orphanRemoval: true)]
     private Collection $radiooptions;
 
     public function __construct()

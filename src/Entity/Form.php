@@ -21,7 +21,7 @@ class Form
     #[ORM\Column(type: 'text')]
     private ?string $description = null;
 
-    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'idForm', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'idForm', cascade: ['persist'], orphanRemoval: true)]
     private Collection $questions;
 
     public function __construct()

@@ -13,11 +13,11 @@ class Radiooption
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(name: 'optiontext', length: 255)]
     private ?string $optionText = null;
 
     #[ORM\ManyToOne(targetEntity: Question::class, inversedBy: 'radiooptions')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'idquestion', nullable: false)]
     private ?Question $idQuestion = null;
 
     public function getId(): ?int
