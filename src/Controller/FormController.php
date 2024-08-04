@@ -54,4 +54,21 @@ class FormController extends AbstractController
 
         return new Response('Form added successfully', Response::HTTP_CREATED);
     }
+
+    #[Route('/form/all', name: 'get_all_forms', methods: ['GET'])]
+    public function getAllForms(EntityManagerInterface $entityManager): Response
+    {
+        $formRepository = $entityManager->getRepository(Form::class);
+        $forms = $formRepository->findAll();
+
+        $data = [];
+        foreach ($forms as $form) {
+            $data[] = [
+                'title' => $form->getTitle(),
+                'description' => $form->getDescription(),
+            ];
+        }
+
+        return $this->json($data);
+    }
 }
