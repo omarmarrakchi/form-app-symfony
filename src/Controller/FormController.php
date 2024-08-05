@@ -71,4 +71,43 @@ class FormController extends AbstractController
 
         return $this->json($data);
     }
+
+    #[Route('/form/{id}', name: 'get_form', methods: ['GET'])]
+    public function getForm(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $formRepository = $entityManager->getRepository(Form::class);
+        $form = $formRepository->find($id);
+
+        if (!$form) {
+            return $this->json(['error' => 'Form not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = [
+            'title' => $form->getTitle(),
+            'description' => $form->getDescription(),
+            'questions' => []
+        ];
+
+        foreach ($form->getQuestions() as $question) {
+            $questionData = [
+                'id' => $question->getId(),
+                'questionText' => $question->getQuestionText(),
+                'type' => $question->getType(),
+            ];
+
+            if ($question->getType() !== 'input') {
+                $questionData['options'] = [];
+                foreach ($question->getRadiooptions() as $option) {
+                    $questionData['options'][] = [
+                        'id' => $option->getId(),
+                        'optionText' => $option->getOptionText()
+                    ];
+                }
+            }
+
+            $data['questions'][] = $questionData;
+        }
+
+        return $this->json($data);
+    }
 }
