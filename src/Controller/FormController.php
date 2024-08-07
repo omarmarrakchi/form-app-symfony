@@ -5,12 +5,17 @@ namespace App\Controller;
 use App\Entity\Form;
 use App\Entity\Question;
 use App\Entity\Radiooption;
+use App\Entity\Responseform;
+
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Uid\Uuid;
+
+
 
 class FormController extends AbstractController
 {
@@ -95,7 +100,7 @@ class FormController extends AbstractController
                 'type' => $question->getType(),
             ];
 
-            if ($question->getType() !== 'input') {
+            if ($question->getType() == 'radio') {
                 $questionData['options'] = [];
                 foreach ($question->getRadiooptions() as $option) {
                     $questionData['options'][] = [
@@ -109,5 +114,30 @@ class FormController extends AbstractController
         }
 
         return $this->json($data);
+    }
+
+    #[Route('/api/add', name: 'submit_responses', methods: ['GET', 'POST'])]
+    public function submitResponses(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $sessionId = Uuid::v4()->toRfc4122();
+        $currentDateTime = new \DateTime();
+
+        foreach ($data as $questionId => $responseText) {
+            $question = $entityManager->getRepository(Question::class)->find($questionId);
+            if ($question) {
+                $response = new Responseform();
+                $response->setSessionId($sessionId);
+                $response->setReponse($responseText);
+                $response->setDateResponse($currentDateTime);
+                $response->setIdQuestion($question);
+
+                $entityManager->persist($response);
+            }
+        }
+
+        $entityManager->flush();
+
+        return new Response('Responses submitted successfully', Response::HTTP_CREATED);
     }
 }

@@ -28,9 +28,13 @@ class Question
     #[ORM\OneToMany(targetEntity: Radiooption::class, mappedBy: 'idQuestion', cascade: ['persist'], orphanRemoval: true)]
     private Collection $radiooptions;
 
+    #[ORM\OneToMany(targetEntity: Responseform::class, mappedBy: 'idQuestion', cascade: ['persist'], orphanRemoval: true)]
+    private Collection $responses;
+
     public function __construct()
     {
         $this->radiooptions = new ArrayCollection();
+        $this->responses = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -98,6 +102,36 @@ class Question
             // set the owning side to null (unless already changed)
             if ($radiooption->getIdQuestion() === $this) {
                 $radiooption->setIdQuestion(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getResponses(): Collection
+    {
+        return $this->responses;
+    }
+
+    public function addResponse(Responseform $response): self
+    {
+        if (!$this->responses->contains($response)) {
+            $this->responses[] = $response;
+            $response->setIdQuestion($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResponse(Responseform $response): self
+    {
+        if ($this->responses->removeElement($response)) {
+            // set the owning side to null (unless already changed)
+            if ($response->getIdQuestion() === $this) {
+                $response->setIdQuestion(null);
             }
         }
 
