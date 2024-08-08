@@ -24,9 +24,13 @@ class Form
     #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'idForm', cascade: ['persist'], orphanRemoval: true)]
     private Collection $questions;
 
+    #[ORM\OneToMany(targetEntity: Reponse::class, mappedBy: 'idForm', cascade: ['persist'], orphanRemoval: true)]
+    private Collection $responses;
+
     public function __construct()
     {
         $this->questions = new ArrayCollection();
+        $this->responses = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -59,7 +63,7 @@ class Form
     }
 
     /**
-     * @return Collection|Question[]
+     * @return Collection
      */
     public function getQuestions(): Collection
     {
@@ -82,6 +86,36 @@ class Form
             // set the owning side to null (unless already changed)
             if ($question->getIdForm() === $this) {
                 $question->setIdForm(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getResponses(): Collection
+    {
+        return $this->responses;
+    }
+
+    public function addResponse(Reponse $response): self
+    {
+        if (!$this->responses->contains($response)) {
+            $this->responses[] = $response;
+            $response->setIdForm($this);
+        }
+
+        return $this;
+    }
+
+    public function removeResponse(Reponse $response): self
+    {
+        if ($this->responses->removeElement($response)) {
+            // set the owning side to null (unless already changed)
+            if ($response->getIdForm() === $this) {
+                $response->setIdForm(null);
             }
         }
 

@@ -28,13 +28,13 @@ class Question
     #[ORM\OneToMany(targetEntity: Radiooption::class, mappedBy: 'idQuestion', cascade: ['persist'], orphanRemoval: true)]
     private Collection $radiooptions;
 
-    #[ORM\OneToMany(targetEntity: Responseform::class, mappedBy: 'idQuestion', cascade: ['persist'], orphanRemoval: true)]
-    private Collection $responses;
+    #[ORM\OneToMany(targetEntity: Reponsequestion::class, mappedBy: 'idQuestion', cascade: ['persist'], orphanRemoval: true)]
+    private Collection $reponsequestions;
 
     public function __construct()
     {
         $this->radiooptions = new ArrayCollection();
-        $this->responses = new ArrayCollection();
+        $this->reponsequestions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -116,25 +116,35 @@ class Question
         return $this->responses;
     }
 
-    public function addResponse(Responseform $response): self
+    /**
+     * @return Collection
+     */
+    public function getReponsequestions(): Collection
     {
-        if (!$this->responses->contains($response)) {
-            $this->responses[] = $response;
-            $response->setIdQuestion($this);
+        return $this->reponsequestions;
+    }
+
+    public function addReponsequestion(Reponsequestion $reponsequestion): self
+    {
+        if (!$this->reponsequestions->contains($reponsequestion)) {
+            $this->reponsequestions[] = $reponsequestion;
+            $reponsequestion->setIdQuestion($this);
         }
 
         return $this;
     }
 
-    public function removeResponse(Responseform $response): self
+    public function removeReponsequestion(Reponsequestion $reponsequestion): self
     {
-        if ($this->responses->removeElement($response)) {
+        if ($this->reponsequestions->removeElement($reponsequestion)) {
             // set the owning side to null (unless already changed)
-            if ($response->getIdQuestion() === $this) {
-                $response->setIdQuestion(null);
+            if ($reponsequestion->getIdQuestion() === $this) {
+                $reponsequestion->setIdQuestion(null);
             }
         }
 
         return $this;
     }
+
+
 }

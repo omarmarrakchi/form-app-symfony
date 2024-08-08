@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Form;
 use App\Entity\Question;
 use App\Entity\Radiooption;
+use App\Entity\Reponse;
+use App\Entity\Reponsequestion;
 use App\Entity\Responseform;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,7 +16,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Uid\Uuid;
-
 
 
 class FormController extends AbstractController
@@ -116,28 +117,41 @@ class FormController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/api/add', name: 'submit_responses', methods: ['GET', 'POST'])]
-    public function submitResponses(Request $request, EntityManagerInterface $entityManager): Response
+
+    #[Route('/api/addres', name: 'submit_form_responses', methods: ['GET', 'POST'])]
+    public function submitFormResponses(Request $request, EntityManagerInterface $entityManager): Response
     {
         $data = json_decode($request->getContent(), true);
-        $sessionId = Uuid::v4()->toRfc4122();
+
+        $formId = $data['formId'];
+        $responses = $data['responses'];
         $currentDateTime = new \DateTime();
 
-        foreach ($data as $questionId => $responseText) {
-            $question = $entityManager->getRepository(Question::class)->find($questionId);
-            if ($question) {
-                $response = new Responseform();
-                $response->setSessionId($sessionId);
-                $response->setReponse($responseText);
-                $response->setDateResponse($currentDateTime);
-                $response->setIdQuestion($question);
+        // Create and persist the Reponse entity
+        $reponse = new Reponse();
+        $reponse->setIdForm($entityManager->getRepository(Form::class)->find($formId));
+        $reponse->setDateResponse($currentDateTime);
 
-                $entityManager->persist($response);
-            }
+        $entityManager->persist($reponse);
+        $entityManager->flush();
+
+        // Get the ID of the persisted Reponse entity
+        $reponseId = $reponse->getId();
+
+        // Iterate over the responses and create Reponsequestion entities
+        foreach ($responses as $questionId => $reponseText) {
+            $reponseQuestion = new Reponsequestion();
+            $reponseQuestion->setIdQuestion($entityManager->getRepository(Question::class)->find($questionId));
+            $reponseQuestion->setIdReponse($reponse);
+            $reponseQuestion->setReponseText($reponseText);
+
+            $entityManager->persist($reponseQuestion);
         }
 
         $entityManager->flush();
 
         return new Response('Responses submitted successfully', Response::HTTP_CREATED);
     }
+
+
 }
