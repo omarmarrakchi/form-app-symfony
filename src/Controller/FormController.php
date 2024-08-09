@@ -70,6 +70,7 @@ class FormController extends AbstractController
         $data = [];
         foreach ($forms as $form) {
             $data[] = [
+                'id' => $form->getId(),
                 'title' => $form->getTitle(),
                 'description' => $form->getDescription(),
             ];
