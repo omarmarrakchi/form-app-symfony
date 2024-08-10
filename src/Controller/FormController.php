@@ -128,7 +128,6 @@ class FormController extends AbstractController
         $responses = $data['responses'];
         $currentDateTime = new \DateTime();
 
-        // Create and persist the Reponse entity
         $reponse = new Reponse();
         $reponse->setIdForm($entityManager->getRepository(Form::class)->find($formId));
         $reponse->setDateResponse($currentDateTime);
@@ -136,10 +135,8 @@ class FormController extends AbstractController
         $entityManager->persist($reponse);
         $entityManager->flush();
 
-        // Get the ID of the persisted Reponse entity
         $reponseId = $reponse->getId();
 
-        // Iterate over the responses and create Reponsequestion entities
         foreach ($responses as $questionId => $reponseText) {
             $reponseQuestion = new Reponsequestion();
             $reponseQuestion->setIdQuestion($entityManager->getRepository(Question::class)->find($questionId));
@@ -152,6 +149,59 @@ class FormController extends AbstractController
         $entityManager->flush();
 
         return new Response('Responses submitted successfully', Response::HTTP_CREATED);
+    }
+
+    // src/Controller/FormController.php
+
+    // src/Controller/FormController.php
+
+    #[Route('/form/{id}/responses', name: 'get_form_response', methods: ['GET'])]
+    public function getFormResponses(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $form = $entityManager->getRepository(Form::class)->find($id);
+
+        if (!$form) {
+            return $this->json(['error' => 'Form not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $responsesData = [];
+        $responses = $entityManager->getRepository(Reponse::class)->findBy(['idForm' => $form]);
+
+        foreach ($responses as $response) {
+            $responseQuestionsData = [];
+            $responseQuestions = $entityManager->getRepository(Reponsequestion::class)->findBy(['idReponse' => $response]);
+
+            foreach ($responseQuestions as $responseQuestion) {
+                $question = $responseQuestion->getIdQuestion();
+                $questionData = [
+                    'questionId' => $question->getId(),
+                    'questionText' => $question->getQuestionText(),
+                    'type' => $question->getType(),
+                    'reponseText' => $responseQuestion->getReponseText(),
+                ];
+
+                if ($question->getType() === 'radio') {
+                    $options = [];
+                    foreach ($question->getRadiooptions() as $option) {
+                        $options[] = [
+                            'id' => $option->getId(),
+                            'optionText' => $option->getOptionText(),
+                        ];
+                    }
+                    $questionData['options'] = $options;
+                }
+
+                $responseQuestionsData[] = $questionData;
+            }
+
+            $responsesData[] = [
+                'responseId' => $response->getId(),
+                'dateResponse' => $response->getDateResponse()->format('Y-m-d H:i:s'),
+                'questions' => $responseQuestionsData,
+            ];
+        }
+
+        return $this->json($responsesData);
     }
 
 
