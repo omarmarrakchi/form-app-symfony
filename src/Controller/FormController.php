@@ -162,6 +162,7 @@ class FormController extends AbstractController
 
         $responsesData = [];
         $responses = $entityManager->getRepository(Reponse::class)->findBy(['idForm' => $form]);
+        $totalResponses = count($responses);
 
         foreach ($responses as $response) {
             $responseQuestionsData = [];
@@ -197,7 +198,10 @@ class FormController extends AbstractController
             ];
         }
 
-        return $this->json($responsesData);
+        return $this->json([
+            'totalResponses' => $totalResponses,
+            'responses' => $responsesData,
+        ]);
     }
 
     #[Route('/response/{id}/details', name: 'get_form_response_details', methods: ['GET'])]
@@ -250,6 +254,21 @@ class FormController extends AbstractController
         ];
 
         return $this->json($responseData);
+    }
+
+    #[Route('/form/delete/{id}', name: 'delete_form', methods: ['DELETE'])]
+    public function deleteForm(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $form = $entityManager->getRepository(Form::class)->find($id);
+
+        if (!$form) {
+            return $this->json(['error' => 'Form not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $entityManager->remove($form);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Form deleted successfully'], Response::HTTP_OK);
     }
 
 
