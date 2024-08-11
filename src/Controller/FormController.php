@@ -151,10 +151,6 @@ class FormController extends AbstractController
         return new Response('Responses submitted successfully', Response::HTTP_CREATED);
     }
 
-    // src/Controller/FormController.php
-
-    // src/Controller/FormController.php
-
     #[Route('/form/{id}/responses', name: 'get_form_response', methods: ['GET'])]
     public function getFormResponses(int $id, EntityManagerInterface $entityManager): Response
     {
@@ -202,6 +198,58 @@ class FormController extends AbstractController
         }
 
         return $this->json($responsesData);
+    }
+
+    #[Route('/response/{id}/details', name: 'get_form_response_details', methods: ['GET'])]
+    public function getFormResponseDetails(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $reponse = $entityManager->getRepository(Reponse::class)->find($id);
+
+        if (!$reponse) {
+            return $this->json(['error' => 'Response not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $form = $reponse->getIdForm();
+        $questionsData = [];
+
+        foreach ($form->getQuestions() as $question) {
+            $questionData = [
+                'questionId' => $question->getId(),
+                'questionText' => $question->getQuestionText(),
+                'type' => $question->getType(),
+                'options' => [],
+                'responseText' => null,
+            ];
+
+            if ($question->getType() === 'radio') {
+                foreach ($question->getRadiooptions() as $option) {
+                    $questionData['options'][] = [
+                        'id' => $option->getId(),
+                        'optionText' => $option->getOptionText(),
+                    ];
+                }
+            }
+
+            $reponseQuestion = $entityManager->getRepository(Reponsequestion::class)->findOneBy([
+                'idReponse' => $reponse,
+                'idQuestion' => $question,
+            ]);
+
+            if ($reponseQuestion) {
+                $questionData['responseText'] = $reponseQuestion->getReponseText();
+            }
+
+            $questionsData[] = $questionData;
+        }
+
+        $responseData = [
+            'formId' => $form->getId(),
+            'formTitle' => $form->getTitle(),
+            'formDescription' => $form->getDescription(),
+            'questions' => $questionsData,
+        ];
+
+        return $this->json($responseData);
     }
 
 
