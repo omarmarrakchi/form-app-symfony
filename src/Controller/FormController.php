@@ -223,6 +223,7 @@ class FormController extends AbstractController
                 'type' => $question->getType(),
                 'options' => [],
                 'responseText' => null,
+                //test
             ];
 
             if ($question->getType() === 'radio') {
