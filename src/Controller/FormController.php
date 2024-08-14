@@ -271,5 +271,55 @@ class FormController extends AbstractController
         return $this->json(['message' => 'Form deleted successfully'], Response::HTTP_OK);
     }
 
+    #[Route('/form/{id}/responses-summary', name: 'get_form_responses_with_summary', methods: ['GET'])]
+    public function getFormResponsesWithSummary(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $form = $entityManager->getRepository(Form::class)->find($id);
+
+        if (!$form) {
+            return $this->json(['error' => 'Form not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $responsesData = [];
+        $responses = $entityManager->getRepository(Reponse::class)->findBy(['idForm' => $form]);
+        $totalResponses = count($responses);
+
+        $questionsSummary = [];
+
+        foreach ($form->getQuestions() as $question) {
+            $questionsSummary[$question->getId()] = [
+                'questionText' => $question->getQuestionText(),
+                'type' => $question->getType(),
+                'responses' => [],
+            ];
+        }
+
+        foreach ($responses as $response) {
+            $responsesData[] = [
+                'id' => $response->getId(),
+                'dateResponse' => $response->getDateResponse()->format('Y-m-d H:i:s'),
+            ];
+
+            $responseQuestions = $entityManager->getRepository(Reponsequestion::class)->findBy(['idReponse' => $response]);
+
+            foreach ($responseQuestions as $responseQuestion) {
+                $question = $responseQuestion->getIdQuestion();
+                if ($question->getType() === 'input') {
+                    if (count($questionsSummary[$question->getId()]['responses']) < 8) {
+                        $questionsSummary[$question->getId()]['responses'][] = $responseQuestion->getReponseText();
+                    }
+                } else {
+                    $questionsSummary[$question->getId()]['responses'][] = $responseQuestion->getReponseText();
+                }
+            }
+        }
+
+        return $this->json([
+            'totalResponses' => $totalResponses,
+            'responses' => $responsesData,
+            'questionsSummary' => array_values($questionsSummary),
+        ]);
+    }
+
 
 }
